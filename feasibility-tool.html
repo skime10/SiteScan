@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site Feasibility — BC</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a18;
+    --paper: #f5f2eb;
+    --accent: #c8401a;
+    --muted: #8a8680;
+    --rule: #d4cfc6;
+    --success: #2a6e3f;
+    --warn: #c8401a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding: 18px 40px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+
+  .masthead-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+  }
+
+  .masthead-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .masthead-badge {
+    margin-left: auto;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--rule);
+    padding: 4px 8px;
+  }
+
+  .main {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 40px;
+  }
+
+  .lede {
+    font-family: 'DM Serif Display', serif;
+    font-size: 38px;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+
+  .lede em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .sublede {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    line-height: 1.7;
+    max-width: 480px;
+    margin-bottom: 40px;
+  }
+
+  .search-block {
+    border: 1.5px solid var(--ink);
+    display: flex;
+  }
+
+  .search-block input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 16px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+
+  .search-block input::placeholder {
+    color: var(--muted);
+  }
+
+  .search-block button {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 16px 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .search-block button:hover { background: var(--accent); }
+  .search-block button:disabled { background: var(--muted); cursor: not-allowed; }
+
+  .search-wrap {
+    position: relative;
+    margin-bottom: 8px;
+  }
+
+  .autocomplete-list {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-top: none;
+    z-index: 100;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .autocomplete-list.active { display: block; }
+
+  .autocomplete-item {
+    padding: 11px 20px;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink);
+    transition: background 0.1s;
+  }
+
+  .autocomplete-item:last-child { border-bottom: none; }
+  .autocomplete-item:hover, .autocomplete-item.selected { background: #efece3; }
+
+  .autocomplete-item .addr-main { font-weight: 500; }
+  .autocomplete-item .addr-sub { color: var(--muted); font-size: 10px; margin-top: 2px; }
+
+  .disclaimer-inline {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    line-height: 1.6;
+    margin-bottom: 40px;
+  }
+
+  /* Pipeline status */
+  .pipeline {
+    display: none;
+    margin-bottom: 32px;
+  }
+
+  .pipeline.active { display: block; }
+
+  .pipeline-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .pipeline-steps {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--rule);
+  }
+
+  .step {
+    flex: 1;
+    padding: 10px 14px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    border-right: 1px solid var(--rule);
+    color: var(--muted);
+    transition: all 0.3s;
+  }
+
+  .step:last-child { border-right: none; }
+
+  .step.running {
+    background: #f0ece2;
+    color: var(--ink);
+  }
+
+  .step.done {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .step.error {
+    background: #fdf0ec;
+    color: var(--accent);
+  }
+
+  .step-label { font-weight: 500; display: block; margin-bottom: 2px; }
+  .step-status { font-size: 9px; opacity: 0.7; }
+
+  /* Results */
+  .results {
+    display: none;
+  }
+
+  .results.active { display: block; }
+
+  .result-header {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+  }
+
+  .result-address {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .result-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .meta-chip {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .meta-chip span {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .section {
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .section:last-child {
+    border-bottom: none;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .section-num {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .data-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    margin-bottom: 12px;
+  }
+
+  .data-cell {
+    background: var(--paper);
+    padding: 12px 16px;
+  }
+
+  .data-cell-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .data-cell-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .data-cell-value.accent { color: var(--accent); }
+  .data-cell-value.success { color: var(--success); }
+
+  .narrative {
+    font-size: 12px;
+    line-height: 1.8;
+    color: #3a3a38;
+    padding: 14px 16px;
+    background: #efece3;
+    border-left: 3px solid var(--ink);
+  }
+
+  /* Feasibility signal */
+  .signal-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 20px;
+    border: 1.5px solid var(--ink);
+    margin-bottom: 12px;
+  }
+
+  .signal-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .signal-dot.go { background: var(--success); }
+  .signal-dot.caution { background: #d4a017; }
+  .signal-dot.no { background: var(--accent); }
+
+  .signal-text {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+
+  .signal-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* Error state */
+  .error-block {
+    display: none;
+    padding: 20px;
+    border: 1px solid var(--accent);
+    background: #fdf0ec;
+  }
+
+  .error-block.active { display: block; }
+
+  .error-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .error-msg {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+
+  .footer-note {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    line-height: 1.8;
+  }
+
+  @media (max-width: 600px) {
+    .main { padding: 32px 20px; }
+    .masthead { padding: 16px 20px; }
+    .lede { font-size: 28px; }
+    .data-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-title">SiteScan</div>
+  <div class="masthead-sub">BC Multifamily Feasibility</div>
+  <div class="masthead-badge">Prototype · Beta</div>
+</div>
+
+<div class="main">
+
+  <div class="lede">Drop an address.<br><em>Know what's possible.</em></div>
+  <div class="sublede">Enter any BC address to retrieve parcel data, zoning designation, and a preliminary multifamily development feasibility snapshot. Results are AI-interpreted and for exploratory purposes only.</div>
+
+  <div class="search-wrap">
+    <div class="search-block">
+      <input type="text" id="addressInput" placeholder="Start typing a BC address..." autocomplete="off" />
+      <button id="runBtn" onclick="runAnalysis()">Analyse →</button>
+    </div>
+    <div class="autocomplete-list" id="autocompleteList"></div>
+  </div>
+  <div class="disclaimer-inline">⚠ This tool is in active development. Zoning data accuracy varies by municipality. All outputs require professional verification before any decisions are made.</div>
+
+  <!-- Pipeline Steps -->
+  <div class="pipeline" id="pipeline">
+    <div class="pipeline-label">Data Pipeline</div>
+    <div class="pipeline-steps">
+      <div class="step" id="step1">
+        <span class="step-label">01 Geocode</span>
+        <span class="step-status" id="step1s">Waiting</span>
+      </div>
+      <div class="step" id="step2">
+        <span class="step-label">02 Parcel</span>
+        <span class="step-status" id="step2s">Waiting</span>
+      </div>
+      <div class="step" id="step3">
+        <span class="step-label">03 Zoning</span>
+        <span class="step-status" id="step3s">Waiting</span>
+      </div>
+      <div class="step" id="step4">
+        <span class="step-label">04 Bylaw</span>
+        <span class="step-status" id="step4s">Waiting</span>
+      </div>
+      <div class="step" id="step5">
+        <span class="step-label">05 Analysis</span>
+        <span class="step-status" id="step5s">Waiting</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Block -->
+  <div class="error-block" id="errorBlock">
+    <div class="error-title">Pipeline Error</div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <div class="result-header">
+      <div class="result-address" id="resAddress"></div>
+      <div class="result-meta">
+        <div class="meta-chip">Municipality: <span id="resMuni"></span></div>
+        <div class="meta-chip">Zone: <span id="resZone"></span></div>
+        <div class="meta-chip">Coords: <span id="resCoords"></span></div>
+      </div>
+    </div>
+
+    <!-- Section 1: Site Data -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <span class="section-title">Site Data</span>
+      </div>
+      <div class="data-grid">
+        <div class="data-cell">
+          <div class="data-cell-label">Lot Area</div>
+          <div class="data-cell-value" id="resLotArea">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Zoning Designation</div>
+          <div class="data-cell-value" id="resZoneVal">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Calculation Method</div>
+          <div class="data-cell-value" id="resMethod">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Max Height</div>
+          <div class="data-cell-value" id="resHeight">—</div>
+        </div>
+      </div>
+      <div class="narrative" id="resBylawSource"></div>
+    </div>
+
+    <!-- Section 2: Base Scenario -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <span class="section-title">Base Scenario</span>
+      </div>
+      <div class="data-grid">
+        <div class="data-cell">
+          <div class="data-cell-label">Base FSR / Density</div>
+          <div class="data-cell-value" id="resFSRBase">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Max GFA</div>
+          <div class="data-cell-value" id="resGFABase">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Est. Units</div>
+          <div class="data-cell-value" id="resUnitsBase">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Est. Gross Revenue</div>
+          <div class="data-cell-value accent" id="resRevenueBase">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Bonus Scenario -->
+    <div class="section" id="bonusSection">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <span class="section-title">Bonus Scenario</span>
+      </div>
+      <div class="data-grid">
+        <div class="data-cell">
+          <div class="data-cell-label">Bonus FSR / Density</div>
+          <div class="data-cell-value" id="resFSRBonus">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Max GFA</div>
+          <div class="data-cell-value" id="resGFABonus">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Est. Units</div>
+          <div class="data-cell-value" id="resUnitsBonus">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Est. Gross Revenue</div>
+          <div class="data-cell-value accent" id="resRevenueBonus">—</div>
+        </div>
+      </div>
+      <div class="narrative" id="resBonusTrigger"></div>
+    </div>
+
+    <!-- Section 4: Revenue Assumptions -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <span class="section-title">Revenue Assumptions</span>
+      </div>
+      <div class="data-grid">
+        <div class="data-cell">
+          <div class="data-cell-label">Sale PSF Used</div>
+          <div class="data-cell-value" id="resPSF">—</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Avg Unit Size</div>
+          <div class="data-cell-value">850 sq ft</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Efficiency Ratio</div>
+          <div class="data-cell-value">82%</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-cell-label">Product Type</div>
+          <div class="data-cell-value" id="resProductType">—</div>
+        </div>
+      </div>
+      <div class="narrative" id="resRevNarrative"></div>
+    </div>
+
+    <!-- Section 5: Feasibility Signal -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <span class="section-title">Feasibility Signal</span>
+      </div>
+      <div class="signal-bar" id="signalBar">
+        <div class="signal-dot" id="signalDot"></div>
+        <div>
+          <div class="signal-text" id="signalText"></div>
+          <div class="signal-sub" id="signalSub"></div>
+        </div>
+      </div>
+      <div class="narrative" id="resSignalNarrative"></div>
+    </div>
+
+  </div>
+
+  <div class="footer-note">
+    SiteScan is an AI-assisted research tool. All outputs are preliminary estimates based on publicly available data and AI interpretation. Zoning bylaws, FSR calculations, and revenue projections require verification by a qualified professional. This tool does not constitute professional planning, real estate, or financial advice. Data sourced from BC Geocoder, ParcelMap BC, and municipal open data layers.
+  </div>
+
+</div>
+
+<script>
+const GEOCODER = 'https://geocoder.api.gov.bc.ca/addresses.json';
+const PARCEL_WFS = 'https://openmaps.gov.bc.ca/geo/pub/WHSE_CADASTRE.PMBC_PARCEL_FABRIC_POLY_SVW/wfs';
+
+// Municipal zoning WFS endpoints
+const MUNI_ZONING = {
+  'Vancouver':      'https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/zoning-districts-and-labels/records',
+  'Burnaby':        null,
+  'Surrey':         null,
+  'Richmond':       null,
+  'Abbotsford':     null,
+  'Coquitlam':      null,
+  'default':        null
+};
+
+// Revenue benchmarks by municipality (rough $/sqft strata sale)
+const PSF_BENCHMARKS = {
+  'Vancouver':   1400,
+  'Burnaby':     1150,
+  'Surrey':      850,
+  'Richmond':    1050,
+  'Coquitlam':   850,
+  'Abbotsford':  650,
+  'default':     750
+};
+
+function setStep(n, state, msg) {
+  const el = document.getElementById('step' + n);
+  const st = document.getElementById('step' + n + 's');
+  el.className = 'step ' + state;
+  st.textContent = msg;
+}
+
+function showError(msg) {
+  document.getElementById('errorBlock').classList.add('active');
+  document.getElementById('errorMsg').innerHTML = msg;
+  document.getElementById('runBtn').disabled = false;
+}
+
+function fmt(n) {
+  return n.toLocaleString('en-CA');
+}
+
+function fmtDollar(n) {
+  if (n >= 1000000) return '$' + (n / 1000000).toFixed(2) + 'M';
+  return '$' + fmt(Math.round(n));
+}
+
+async function runAnalysis() {
+  const addr = document.getElementById('addressInput').value.trim();
+  if (!addr) return;
+
+  // Reset
+  document.getElementById('runBtn').disabled = true;
+  document.getElementById('errorBlock').classList.remove('active');
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('pipeline').classList.add('active');
+  ['1','2','3','4','5'].forEach(n => setStep(n, '', 'Waiting'));
+
+  // ── STEP 1: Geocode ──────────────────────────────────────
+  setStep(1, 'running', 'Resolving...');
+  let lat, lon, fullAddress, municipality;
+
+  try {
+    const addrQuery = /\bBC\b/i.test(addr) ? addr : addr + ', BC';
+    const geoRes = await fetch(`${GEOCODER}?addressString=${encodeURIComponent(addrQuery)}&maxResults=1&outputSRS=4326`);
+    const geoData = await geoRes.json();
+    const feat = geoData.features?.[0];
+    if (!feat) throw new Error('Address not found. Try adding city name (e.g. "3026 Clearbrook Rd, Abbotsford").');
+    lon = feat.geometry.coordinates[0];
+    lat = feat.geometry.coordinates[1];
+    fullAddress = feat.properties.fullAddress;
+    municipality = feat.properties.localityName || 'Unknown';
+    setStep(1, 'done', `${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+  } catch(e) {
+    setStep(1, 'error', 'Failed');
+    return showError(`<strong>Geocoder failed:</strong> ${e.message}`);
+  }
+
+  // ── STEP 2: Parcel Data ──────────────────────────────────
+  setStep(2, 'running', 'Querying...');
+  let lotAreaSqM = null, lotAreaSqFt = null, pid = null;
+
+  try {
+    const bbox = `${lon-0.001},${lat-0.001},${lon+0.001},${lat+0.001}`;
+    const wfsUrl = `${PARCEL_WFS}?service=WFS&version=2.0.0&request=GetFeature&typeName=WHSE_CADASTRE.PMBC_PARCEL_FABRIC_POLY_SVW&outputFormat=application/json&srsName=EPSG:4326&bbox=${bbox},EPSG:4326&count=5`;
+    const parcelRes = await fetch(wfsUrl);
+    const parcelData = await parcelRes.json();
+
+    // Find the parcel that contains our point
+    let bestParcel = null;
+    if (parcelData.features?.length > 0) {
+      // Use first result as approximation
+      bestParcel = parcelData.features[0];
+      lotAreaSqM = bestParcel.properties.FEATURE_AREA_SQM;
+      pid = bestParcel.properties.PID;
+    }
+
+    if (lotAreaSqM) {
+      lotAreaSqFt = Math.round(lotAreaSqM * 10.764);
+      setStep(2, 'done', `${fmt(lotAreaSqFt)} sq ft`);
+    } else {
+      setStep(2, 'error', 'No parcel found');
+      showError('Parcel data not found for this address. The parcel fabric may not cover this area yet. Try a different address.');
+      return;
+    }
+  } catch(e) {
+    setStep(2, 'error', 'Failed');
+    return showError(`<strong>Parcel lookup failed:</strong> ${e.message}`);
+  }
+
+  // ── STEP 3: Zoning ──────────────────────────────────────
+  setStep(3, 'running', 'Looking up...');
+  let zone = null, zoneName = null, maxFSR = null, maxHeight = null;
+
+  // Try Vancouver open data first if municipality matches
+  if (municipality === 'Vancouver') {
+    try {
+      const zRes = await fetch(`${MUNI_ZONING['Vancouver']}?where=&geofilter.distance=${lat},${lon},100&limit=1`);
+      const zData = await zRes.json();
+      if (zData.results?.length > 0) {
+        zone = zData.results[0].zone_category_general || zData.results[0].zone_name;
+        zoneName = zData.results[0].zone_name;
+      }
+    } catch(e) {
+      // Fall through to AI interpretation
+    }
+  }
+
+  // If no zone from API, mark as requiring AI interpretation
+  if (!zone) {
+    zone = 'Requires verification';
+    setStep(3, 'error', 'Manual check needed');
+  } else {
+    setStep(3, 'done', zone);
+  }
+
+  // ── STEP 4: Bylaw Lookup ─────────────────────────────────
+  setStep(4, 'running', 'Searching bylaw...');
+
+  const bylawPrompt = `You are a zoning bylaw researcher for British Columbia, Canada.
+
+A site has been identified with the following details:
+ADDRESS: ${fullAddress}
+MUNICIPALITY: ${municipality}
+ZONE: ${zone}
+
+Your task is to search for and extract the current zoning bylaw parameters for zone "${zone}" in ${municipality}, BC.
+
+SEARCH INSTRUCTIONS:
+- Search for "${zone} ${municipality} zoning bylaw" 
+- Find the official municipal bylaw document or zoning schedule
+- Extract the exact development parameters
+- Always convert any units/hectare figures to square feet equivalent
+- If bonus FSR exists, identify exactly what triggers it
+
+CALCULATION METHOD:
+- If the zone uses FSR: method = "FSR"
+- If the zone uses units per hectare: method = "UPH", convert by: (units/ha ÷ 107,639) × lot_sqft = unit count
+- Always report both FSR equivalent and units where possible
+
+Respond ONLY with valid JSON, no markdown, no preamble:
+{
+  "zone": "confirmed zone code",
+  "zoneName": "full zone name",
+  "method": "FSR" or "UPH",
+  "baseFSR": number or null,
+  "bonusFSR": number or null,
+  "baseUnitsPerHa": number or null,
+  "bonusUnitsPerHa": number or null,
+  "bonusTrigger": "exact description of what triggers bonus density, or null if no bonus",
+  "maxHeight": "X storeys / Xm",
+  "maxLotCoverage": "X%",
+  "bylawSource": "URL or document name where this was found",
+  "dataConfidence": "confirmed" or "inferred",
+  "notes": "any important caveats about this zone"
+}`;
+
+  let bylawData;
+  try {
+    const bylawRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: [{ role: 'user', content: bylawPrompt }]
+      })
+    });
+
+    const bylawJson = await bylawRes.json();
+    const fullText = bylawJson.content
+      .map(b => b.type === 'text' ? b.text : '')
+      .filter(Boolean)
+      .join('\n');
+
+    bylawData = JSON.parse(fullText.replace(/```json|```/g, '').trim());
+    setStep(4, 'done', bylawData.dataConfidence === 'confirmed' ? '✓ Confirmed' : '⚠ Inferred');
+
+  } catch(e) {
+    setStep(4, 'error', 'Failed');
+    return showError(`<strong>Bylaw lookup failed:</strong> ${e.message}`);
+  }
+
+  // ── STEP 5: Feasibility Analysis ─────────────────────────
+  setStep(5, 'running', 'Calculating...');
+
+  const psf = PSF_BENCHMARKS[municipality] || PSF_BENCHMARKS['default'];
+  const lotSqFt = lotAreaSqFt;
+
+  // Calculate base and bonus scenarios
+  function calcScenario(fsr, unitsPerHa, method) {
+    let gfa, units, netSellable, revenue;
+    if (method === 'UPH' && unitsPerHa) {
+      const lotHa = lotSqFt / 107639;
+      units = Math.floor(lotHa * unitsPerHa);
+      gfa = units * 850 / 0.82;
+      netSellable = units * 850;
+    } else if (fsr) {
+      gfa = lotSqFt * fsr;
+      netSellable = gfa * 0.82;
+      units = Math.floor(netSellable / 850);
+    } else {
+      return null;
+    }
+    revenue = netSellable * psf;
+    return { gfa: Math.round(gfa), netSellable: Math.round(netSellable), units, revenue: Math.round(revenue) };
+  }
+
+  const baseScenario = calcScenario(bylawData.baseFSR, bylawData.baseUnitsPerHa, bylawData.method);
+  const bonusScenario = (bylawData.bonusFSR || bylawData.bonusUnitsPerHa)
+    ? calcScenario(bylawData.bonusFSR, bylawData.bonusUnitsPerHa, bylawData.method)
+    : null;
+
+  const analysisPrompt = `You are a real estate development feasibility analyst in BC, Canada.
+
+Site details:
+ADDRESS: ${fullAddress}
+MUNICIPALITY: ${municipality}
+LOT SIZE: ${lotSqFt} sq ft
+ZONE: ${bylawData.zone} — ${bylawData.zoneName}
+METHOD: ${bylawData.method}
+BASE FSR/DENSITY: ${bylawData.baseFSR || bylawData.baseUnitsPerHa + ' units/ha'}
+BONUS FSR/DENSITY: ${bylawData.bonusFSR || bylawData.bonusUnitsPerHa ? (bylawData.bonusFSR || bylawData.bonusUnitsPerHa + ' units/ha') : 'None'}
+BONUS TRIGGER: ${bylawData.bonusTrigger || 'N/A'}
+BASE SCENARIO: ${baseScenario ? JSON.stringify(baseScenario) : 'N/A'}
+BONUS SCENARIO: ${bonusScenario ? JSON.stringify(bonusScenario) : 'N/A'}
+SALE PSF USED: $${psf}/sqft (${municipality} apartment benchmark)
+
+Provide a brief feasibility interpretation. Be direct, use the numbers above, include disclaimers.
+
+Respond ONLY with valid JSON, no markdown:
+{
+  "productType": "Low-Rise Apartment" or "Mid-Rise Apartment" or "Townhouse" or "Mixed",
+  "feasibilitySignal": "GO" or "CAUTION" or "NO",
+  "feasibilityReason": "one concise sentence",
+  "revNarrative": "2 sentence revenue commentary with market caveats",
+  "signalNarrative": "2-3 sentence overall feasibility read with strong disclaimers"
+}`;
+
+  try {
+    const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{ role: 'user', content: analysisPrompt }]
+      })
+    });
+
+    const aiData = await aiRes.json();
+    const rawText = aiData.content?.[0]?.text || '';
+    const analysis = JSON.parse(rawText.replace(/```json|```/g, '').trim());
+
+    setStep(5, 'done', 'Complete');
+
+    // ── Render Results ──────────────────────────────────────
+    document.getElementById('resAddress').textContent = fullAddress;
+    document.getElementById('resMuni').textContent = municipality;
+    document.getElementById('resZone').textContent = bylawData.zone;
+    document.getElementById('resCoords').textContent = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+
+    document.getElementById('resLotArea').textContent = `${fmt(lotSqFt)} sq ft`;
+    document.getElementById('resZoneVal').textContent = `${bylawData.zone} — ${bylawData.zoneName}`;
+    document.getElementById('resMethod').textContent = bylawData.method === 'FSR' ? 'Floor Space Ratio (FSR)' : 'Units per Hectare (converted to sq ft)';
+    document.getElementById('resHeight').textContent = bylawData.maxHeight || '—';
+    document.getElementById('resBylawSource').textContent = `Source: ${bylawData.bylawSource || 'Web search'} · Confidence: ${bylawData.dataConfidence}${bylawData.notes ? ' · ' + bylawData.notes : ''}`;
+
+    // Base scenario
+    if (baseScenario) {
+      document.getElementById('resFSRBase').textContent = bylawData.method === 'FSR' ? `${bylawData.baseFSR} FSR` : `${bylawData.baseUnitsPerHa} units/ha`;
+      document.getElementById('resGFABase').textContent = `${fmt(baseScenario.gfa)} sq ft GFA / ${fmt(baseScenario.netSellable)} sq ft sellable`;
+      document.getElementById('resUnitsBase').textContent = `~${baseScenario.units} units`;
+      document.getElementById('resRevenueBase').textContent = fmtDollar(baseScenario.revenue);
+    }
+
+    // Bonus scenario
+    if (bonusScenario) {
+      document.getElementById('resFSRBonus').textContent = bylawData.method === 'FSR' ? `${bylawData.bonusFSR} FSR` : `${bylawData.bonusUnitsPerHa} units/ha`;
+      document.getElementById('resGFABonus').textContent = `${fmt(bonusScenario.gfa)} sq ft GFA / ${fmt(bonusScenario.netSellable)} sq ft sellable`;
+      document.getElementById('resUnitsBonus').textContent = `~${bonusScenario.units} units`;
+      document.getElementById('resRevenueBonus').textContent = fmtDollar(bonusScenario.revenue);
+      document.getElementById('resBonusTrigger').textContent = `How to achieve bonus: ${bylawData.bonusTrigger}`;
+    } else {
+      document.getElementById('bonusSection').style.display = 'none';
+    }
+
+    document.getElementById('resPSF').textContent = `$${fmt(psf)}/sq ft`;
+    document.getElementById('resProductType').textContent = analysis.productType || '—';
+    document.getElementById('resRevNarrative').textContent = analysis.revNarrative || '';
+
+    const dot = document.getElementById('signalDot');
+    const sig = (analysis.feasibilitySignal || 'CAUTION').toUpperCase();
+    dot.className = 'signal-dot ' + (sig === 'GO' ? 'go' : sig === 'NO' ? 'no' : 'caution');
+    document.getElementById('signalText').textContent = sig === 'GO' ? '✓ Proceed to deeper analysis' : sig === 'NO' ? '✗ Significant barriers identified' : '⚠ Caution — further review required';
+    document.getElementById('signalSub').textContent = analysis.feasibilityReason || '';
+    document.getElementById('resSignalNarrative').textContent = analysis.signalNarrative || '';
+
+    document.getElementById('results').classList.add('active');
+    document.getElementById('runBtn').disabled = false;
+
+  } catch(e) {
+    setStep(5, 'error', 'Failed');
+    showError(`<strong>Analysis failed:</strong> ${e.message}`);
+  }
+}
+
+// ── Autocomplete ─────────────────────────────────────────
+const SUGGEST_URL = 'https://geocoder.api.gov.bc.ca/addresses.json';
+let acDebounce = null;
+let acSelected = -1;
+let acItems = [];
+
+const input = document.getElementById('addressInput');
+const list = document.getElementById('autocompleteList');
+
+input.addEventListener('input', () => {
+  clearTimeout(acDebounce);
+  const val = input.value.trim();
+  if (val.length < 4) { closeAC(); return; }
+  acDebounce = setTimeout(() => fetchSuggestions(val), 280);
+});
+
+async function fetchSuggestions(query) {
+  try {
+    const url = `${SUGGEST_URL}?addressString=${encodeURIComponent(query)}&maxResults=6&outputSRS=4326&matchPrecision=occupant,unit,site,civic_number,intersection,block,street`;
+    const res = await fetch(url);
+    const data = await res.json();
+    acItems = data.features || [];
+    renderAC();
+  } catch(e) { closeAC(); }
+}
+
+function renderAC() {
+  if (!acItems.length) { closeAC(); return; }
+  list.innerHTML = '';
+  acSelected = -1;
+  acItems.forEach((feat, i) => {
+    const addr = feat.properties.fullAddress || '';
+    const score = feat.properties.score || '';
+    const div = document.createElement('div');
+    div.className = 'autocomplete-item';
+    div.innerHTML = `<div class="addr-main">${addr}</div><div class="addr-sub">Match score: ${score}</div>`;
+    div.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      selectItem(i);
+    });
+    list.appendChild(div);
+  });
+  list.classList.add('active');
+}
+
+function selectItem(i) {
+  if (!acItems[i]) return;
+  input.value = acItems[i].properties.fullAddress;
+  closeAC();
+  runAnalysis();
+}
+
+function closeAC() {
+  list.classList.remove('active');
+  list.innerHTML = '';
+  acSelected = -1;
+}
+
+input.addEventListener('keydown', e => {
+  const items = list.querySelectorAll('.autocomplete-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    acSelected = Math.min(acSelected + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('selected', i === acSelected));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    acSelected = Math.max(acSelected - 1, -1);
+    items.forEach((el, i) => el.classList.toggle('selected', i === acSelected));
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (acSelected >= 0 && acItems[acSelected]) {
+      selectItem(acSelected);
+    } else {
+      closeAC();
+      runAnalysis();
+    }
+  } else if (e.key === 'Escape') {
+    closeAC();
+  }
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-wrap')) closeAC();
+});
+</script>
+
+</body>
+</html>
