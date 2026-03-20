@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -498,35 +499,55 @@
   }
 
   // ─── Step 2: Parcel + Zoning ─────────────────────────────────────────────────
+  // Uses JSONP because the MapServer doesn't send CORS headers.
 
-  async function lookupParcel(lng, lat) {
-    const params = new URLSearchParams({
-      geometry: `${lng},${lat}`,
-      geometryType: 'esriGeometryPoint',
-      spatialRel: 'esriSpatialRelIntersects',
-      inSR: 4326,
-      outSR: 4326,
-      outFields: '*',
-      returnGeometry: false,
-      f: 'json',
+  function lookupParcel(lng, lat) {
+    return new Promise((resolve, reject) => {
+      const cbName = '_abbyGIS_' + Date.now();
+      const params = new URLSearchParams({
+        geometry: `${lng},${lat}`,
+        geometryType: 'esriGeometryPoint',
+        spatialRel: 'esriSpatialRelIntersects',
+        inSR: 4326,
+        outSR: 4326,
+        outFields: '*',
+        returnGeometry: false,
+        f: 'json',
+        callback: cbName,
+      });
+
+      const script = document.createElement('script');
+      const cleanup = () => { delete window[cbName]; script.remove(); };
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error('Abbotsford GIS request timed out.'));
+      }, 15000);
+
+      window[cbName] = (data) => {
+        clearTimeout(timer);
+        cleanup();
+        if (data.error) {
+          reject(new Error(`GIS error ${data.error.code}: ${data.error.message}`));
+          return;
+        }
+        if (!data.features || data.features.length === 0) {
+          reject(new Error(
+            'No parcel found at these coordinates. The property may be outside Abbotsford city limits.'
+          ));
+          return;
+        }
+        resolve({ attrs: data.features[0].attributes, raw: data });
+      };
+
+      script.onerror = () => {
+        clearTimeout(timer);
+        cleanup();
+        reject(new Error('Failed to reach Abbotsford GIS server.'));
+      };
+
+      script.src = `${ABBY_PARCEL_URL}?${params}`;
+      document.head.appendChild(script);
     });
-
-    const res = await fetch(`${ABBY_PARCEL_URL}?${params}`);
-    if (!res.ok) throw new Error(`Abbotsford GIS returned HTTP ${res.status}`);
-
-    const data = await res.json();
-
-    if (data.error) {
-      throw new Error(`GIS error ${data.error.code}: ${data.error.message}`);
-    }
-
-    if (!data.features || data.features.length === 0) {
-      throw new Error(
-        'No parcel found at these coordinates. The property may be outside Abbotsford city limits, or the GIS layer may not cover this area.'
-      );
-    }
-
-    return { attrs: data.features[0].attributes, raw: data };
   }
 
   // ─── Main ────────────────────────────────────────────────────────────────────
